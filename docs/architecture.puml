@@ -1,0 +1,63 @@
+@startuml state
+    [*] --> init
+    init --> idle
+    idle --> recvPacket
+    
+    
+    
+
+    state "incoming packet" as recvPacket {
+        [*] -d-> decHeader
+
+        decHeader -d-> handelProtAudio : format_SR = 0x00
+        decHeader -d-> handelProtSerial : format_SR = 0x20
+        decHeader -d-> handelProtTxt : format_SR = 0x40
+        decHeader -d-> handelProtService : format_SR = 0x60
+        
+        decHeader -d-> [*] : abort
+        handelProtAudio -d-> [*]
+        handelProtSerial -d-> [*]
+        handelProtTxt -d-> [*]
+        handelProtService -d-> [*]
+
+        state "decode header" as decHeader{
+            decHeader : check FOUC = 'VBAN'
+            decHeader : get format_SR 
+            decHeader : if FOURC not matches abort
+        }
+        state "handle protocol audio" as  handelProtAudio{
+            [*] -d-> decAudioHeader
+            decAudioHeader -d-> handlePCM : codec = 0x00
+            handlePCM -d-> putToBuffer
+            putToBuffer -d-> [*]
+            decAudioHeader -d-> [*] : aborted
+
+            state "decode audio header" as decAudioHeader {
+                decAudioHeader : get sample rate
+                decAudioHeader : get samples in frame
+                decAudioHeader : get number of channels
+                decAudioHeader : get data format
+                decAudioHeader : get codec
+                decAudioHeader : get stream name
+                decAudioHeader : get frame counter
+                decAudioHeader : if stream name or frame counter do not macht disregard frame
+            }
+            state "handle PCM" as handlePCM {
+                handlePCM : seperate channels
+                handlePCM : convert data to uint16_t format
+            }
+            
+        }
+        state "handle protocol serial" as  handelProtSerial{
+            
+        }
+        state "handle protocol txt" as  handelProtTxt{
+            
+        }
+        state "handle protocol service" as  handelProtService{
+            
+        }
+        
+    }
+    
+@enduml
