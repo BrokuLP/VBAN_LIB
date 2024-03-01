@@ -50,14 +50,23 @@
 #define VBAN_DATATYPE_12BITS        0x06
 #define VBAN_DATATYPE_10BITS        0x07
 
+//definition of error codes
+#define VBAN_ERR_UNSUPPORTED_DATATYPE     0x0001
+
 class vban
 {
 private:
     //private variables
+    struct _dataStreamInfo
+    {
+        /* data */
+    };
+    
     uint8_t _subbedStreamName[16];
 
 
     void _handleProtAudio(void *data, uint16_t packetSize);
+    void _postError(uint16_t errorCode);
 
     //packet format definitions
     struct _generalHeader

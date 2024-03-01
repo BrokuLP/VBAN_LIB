@@ -78,20 +78,68 @@ void vban::_handleProtAudio(void *data, uint16_t packetSize){
     //buffer for data frame
     uint16_t dataOut[VBAN_MAX_PACKET_LENGTH];
 
-    //format data to uint16_t
+    //format data to uint16_t with zero at 32767
     switch (_dataFormat)
     {
-    case VBAN_DATATYPE_INT16:
-            int16_t packet = (int16_t) data;
+        case VBAN_DATATYPE_BYTE8:
+            int8_t* packet = (int8_t*) data;
+            for (uint16_t i = VBAN_header_size; i < _samples*_channels; i++)
+            {
+                dataOut[i-VBAN_header_size] = (uint16_t) packet[i]*256;
+            }
+            break;
+
+        case VBAN_DATATYPE_INT16:
+            int16_t* packet = (int16_t*) data;
             for (uint16_t i = VBAN_header_size/2; i < _samples*_channels; i++)
             {
-                dataOut[i-VBAN_header_size/2] = *packet[i] + 32768;
+                dataOut[i-VBAN_header_size/2] = (uint16_t) packet[i] + 32768;
             }
+            break;
             
-        break;
-    
-    default:
-        break;
+        case VBAN_DATATYPE_INT24:
+
+            break;
+        
+        case VBAN_DATATYPE_INT32:
+            int32_t* packet = (int32_t*) data;
+            for (uint16_t i = VBAN_header_size/4; i < _samples*_channels; i++)
+            {
+                dataOut[i-VBAN_header_size/4] = (uint16_t) packet[i]/65536 + 32768;
+            }
+            break;
+
+        case VBAN_DATATYPE_FLOAT32:
+            float* packet = (float*) data;
+            for (uint16_t i = VBAN_header_size/4; i < _samples*_channels; i++)
+            {
+                dataOut[i-VBAN_header_size/4] = (uint16_t) packet[i]*32767 + 32767;
+            }
+            break;
+
+        case VBAN_DATATYPE_FLOAT64:
+            double* packet = (double*) data;
+            for (uint16_t i = VBAN_header_size/8; i < _samples*_channels; i++)
+            {
+                dataOut[i-VBAN_header_size/8] = (uint16_t) packet[i] * 32767 + 32767;
+            }
+            break;
+
+        case VBAN_DATATYPE_12BITS://currently not supported
+            _postError(VBAN_ERR_UNSUPPORTED_DATATYPE);
+            return;
+            break;
+
+        case VBAN_DATATYPE_10BITS://currently not supported
+            _postError(VBAN_ERR_UNSUPPORTED_DATATYPE);
+            return;
+            break;
+
+        default:
+            //post error code if nothing matches and abort execution
+            _postError(VBAN_ERR_UNSUPPORTED_DATATYPE);
+            return;
+            break;
     }
 
 
