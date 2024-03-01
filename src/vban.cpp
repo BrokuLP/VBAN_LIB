@@ -53,8 +53,12 @@ void vban::handlePacket(void *data, uint16_t packetSize){
     
 }
 
-
-
+/**
+ * @brief methode to handle incoming audio packets
+ * 
+ * @param data data section of the udp packet (with vban header)
+ * @param packetSize size of the vban packet in bytes (with header)
+ */
 void vban::_handleProtAudio(void *data, uint16_t packetSize){
     //get audio frame header
     _ptr_audioHeader_t _header = (_ptr_audioHeader_t) data;
@@ -97,8 +101,9 @@ void vban::_handleProtAudio(void *data, uint16_t packetSize){
             }
             break;
             
-        case VBAN_DATATYPE_INT24:
-
+        case VBAN_DATATYPE_INT24://currently not supported
+            _postError(VBAN_ERR_UNSUPPORTED_DATATYPE);
+            return;
             break;
         
         case VBAN_DATATYPE_INT32:
@@ -147,10 +152,20 @@ void vban::_handleProtAudio(void *data, uint16_t packetSize){
     switch (_dataCodec)
     {
         case VBAN_CODEC_PCM:
-
+                //loop through channels
+                for (uint8_t i = 0; i <= _channels; i++)
+                {
+                    //loop through samples
+                    for (uint8_t n = 0; n <= _samples; n++)
+                    {
+                        _putSampleToBuffer(dataOut[i*n],i);
+                    }
+                }
             break;
         
         default:
+            _postError(VBAN_ERR_UNSUPPORTED_CODEC);
+            return;
             break;
     }
 }

@@ -51,7 +51,8 @@
 #define VBAN_DATATYPE_10BITS        0x07
 
 //definition of error codes
-#define VBAN_ERR_UNSUPPORTED_DATATYPE     0x0001
+#define VBAN_ERR_UNSUPPORTED_DATATYPE       0x0001
+#define VBAN_ERR_UNSUPPORTED_CODEC          0x0002
 
 class vban
 {
@@ -91,6 +92,10 @@ private:
     typedef struct _audioHeader *_ptr_audioHeader_t;
     
     //callback methodes
+    /**
+     * @brief pointer to callback function to put one sample in queue for specified channel
+     */
+    void (*_putSampleToBuffer)(uint16_t,uint8_t);
     
 public:
     void handlePacket(void* data, uint16_t packetSize);
