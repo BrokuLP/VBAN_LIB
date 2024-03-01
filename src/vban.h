@@ -4,9 +4,13 @@
 #include <stdint.h>
 
 //definitions
-#define VBAN_header_size 28
-#define VBAN_FOURC 'NABV'
-#define VBAN_MASK_PROT
+#define VBAN_header_size            28
+#define VBAN_FOURC                  'NABV'
+#define VBAN_MASK_PROT              0b11100000
+#define VBAN_MASK_SAMPLE_RATE       0b00011111
+#define VBAN_MASK_DATA_FORMAT       0b11110000
+#define VBAN_MASK_DATA_CODEC        0b00000111
+#define VBAN_MAX_PACKET_LENGTH      1564 //in bytes
 
 // definition of protocoll identifiers
 #define VBAN_PROTOCOL_AUDIO         0x00
@@ -49,7 +53,11 @@
 class vban
 {
 private:
-    void _handleProtAudio();
+    //private variables
+    uint8_t _subbedStreamName[16];
+
+
+    void _handleProtAudio(void *data, uint16_t packetSize);
 
     //packet format definitions
     struct _generalHeader
@@ -59,8 +67,21 @@ private:
     };
     typedef struct _generalHeader _generalHeader_t;
     typedef struct _generalHeader *_ptr_generalHeader_t;
-
-    //callback mehtodes
+    //header for audio frames
+    struct _audioHeader
+    {
+        uint32_t FOURC;
+        uint8_t SR;
+        uint8_t nbs;
+        uint8_t nbc;
+        uint8_t bit;
+        uint8_t streamname[16];
+        uint32_t nuFrame;
+    };
+    typedef struct _audioHeader _audioHeader_t;
+    typedef struct _audioHeader *_ptr_audioHeader_t;
+    
+    //callback methodes
     
 public:
     void handlePacket(void* data, uint16_t packetSize);
