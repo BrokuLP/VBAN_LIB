@@ -49,7 +49,38 @@
             
         }
         state "handle protocol serial" as  handelProtSerial{
+            state "get stream name" as protSerial_getStreamName
+            state protSerial_checkStreamName <<choice>>
+            state "get Channel" as protSerial_getChannel
+            state protSerial_checkChannel <<choice>>
+            state "get frame couter" as protSerial_getFrameCounter
+            state protSerial_checkSequence <<choice>>
+            state "get baud rate" as protSerial_getBaudRate
+            state "get COM-Port settings" as protSerial_getComSetting            
+            state "get data format" as protSerial_getDataFormat
             
+            
+
+            state "configure serial" as protSerial_confSerialPort{
+
+            }
+
+            [*] --> protSerial_getStreamName
+            protSerial_getStreamName --> protSerial_checkStreamName
+            
+            protSerial_checkStreamName --> [*] : not subed
+            protSerial_checkStreamName --> protSerial_getChannel
+
+            protSerial_getChannel --> protSerial_checkChannel
+            protSerial_checkChannel --> [*] : not listed
+            protSerial_checkChannel --> protSerial_getFrameCounter
+            protSerial_getFrameCounter --> protSerial_checkSequence
+            protSerial_checkSequence --> [*] : out of sequence 
+            protSerial_checkSequence --> protSerial_getBaudRate
+            protSerial_getBaudRate --> protSerial_getComSetting
+            protSerial_getComSetting --> protSerial_getDataFormat
+            
+
         }
         state "handle protocol txt" as  handelProtTxt{
             
