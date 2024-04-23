@@ -26,22 +26,49 @@
             decHeader : if FOURC not matches abort
         }
         state "handle protocol audio" as  handelProtAudio{
+
+            state "decode audio header" as decAudioHeader {
+
+                state "get sample rate" as protAudio_getSampleRate
+                state "get number of samples" as prodAudio_getSampleCount
+                state "get number of channels" as prodAudio_getChannelCount
+                state "get data format" as protAudio_getDataFormat
+                state "get codec" as prodAudio_getCodec
+                state "get streamname" as prodAudio_getStreamName
+                state "get frame number" as prodAudio_getFrameNumber
+                
+                state protAudio_checkStreamName <<choice>>
+                state protAudio_checkContinuity <<choice>>
+                state protAudio_checkSampleRate <<choice>>
+                state protAudio_checkCodec <<choice>>
+
+
+                [*] --> prodAudio_getStreamName
+                prodAudio_getStreamName --> protAudio_checkStreamName
+                protAudio_checkStreamName --> prodAudio_getCodec
+                prodAudio_getCodec --> protAudio_checkCodec
+                protAudio_checkCodec --> prodAudio_getFrameNumber
+                prodAudio_getFrameNumber --> protAudio_checkContinuity
+                protAudio_checkContinuity --> protAudio_getSampleRate
+                protAudio_getSampleRate --> protAudio_checkSampleRate
+                protAudio_checkSampleRate --> prodAudio_getSampleCount
+                prodAudio_getSampleCount --> prodAudio_getChannelCount
+                prodAudio_getChannelCount --> protAudio_getDataFormat
+                protAudio_getDataFormat --> [*]
+
+                protAudio_checkSampleRate --> [*] : sample rate not supported
+                protAudio_checkContinuity --> [*] : out of sequence
+                protAudio_checkStreamName --> [*] : not subed
+                protAudio_checkCodec --> [*] : codec not supported
+            }
+
             [*] -d-> decAudioHeader
             decAudioHeader -d-> handlePCM : codec = 0x00
             handlePCM -d-> putToBuffer
             putToBuffer -d-> [*]
             decAudioHeader -d-> [*] : aborted
 
-            state "decode audio header" as decAudioHeader {
-                decAudioHeader : get sample rate
-                decAudioHeader : get samples in frame
-                decAudioHeader : get number of channels
-                decAudioHeader : get data format
-                decAudioHeader : get codec
-                decAudioHeader : get stream name
-                decAudioHeader : get frame counter
-                decAudioHeader : if stream name or frame counter do not macht disregard frame
-            }
+            
             state "handle PCM" as handlePCM {
                 handlePCM : seperate channels
                 handlePCM : convert data to uint16_t format
