@@ -1,0 +1,14 @@
+@startuml systemComponents
+    package "VBAN library"{
+        component "handlePacket" {
+            portin packet
+            portin len
+        }
+        
+    }
+
+    package "Callbacks" {
+        [cb_put_to_buffer]
+        [cb_transmit_udp]
+    }
+@enduml
