@@ -11,7 +11,24 @@
 
 #include <stdint.h>
 
+#define VBAN_AUDIO_CODEC_MASK       0b11110000
+#define VBAN_AUDIO_DTYPE_MASK       0b00000111
 
+//datatype flags
+#define VBAN_AUDIO_DTYPE_BYTE8      0x00
+#define VBAN_AUDIO_DTYPE_INT16      0x01
+#define VBAN_AUDIO_DTYPE_INT24      0x02
+#define VBAN_AUDIO_DTYPE_INT32      0x03
+#define VBAN_AUDIO_DTYPE_FLOAT32    0x04
+#define VBAN_AUDIO_DTYPE_FLOAT64    0x05
+#define VBAN_AUDIO_DTYPE_12BITS     0x06
+#define VBAN_AUDIO_DTYPE_10BITS     0x07
+
+//codec type flags
+#define VBAN_AUDIO_CODEC_PCM        0x00
+#define VBAN_AUDIO_CODEC_VBCA       0x10
+#define VBAN_AUDIO_CODEC_VBCV       0x20
+#define VBAN_AUDIO_CODEC_USER       0xF0
 
 
 class VBAN_AUDIO
@@ -37,6 +54,7 @@ private:
 
     //private functions
     uint8_t resample(uint16_t *source, uint16_t source_len, uint16_t source_freq, uint16_t *target, uint16_t target_len, uint16_t target_freq);
+    uint8_t transform_PCM(void *buffer, uint16_t nbs, uint16_t nbc, uint8_t dtype, int16_t *output);
 public:
     //public functions
     uint8_t init();

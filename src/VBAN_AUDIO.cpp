@@ -19,15 +19,31 @@
  * @param len length of the supplied body
  * @return uint8_t 
  * @retval 0 >> handler finished with success
+ * @retval 1 >> codec not supported
  */
 uint8_t VBAN_AUDIO::handle(void *packet, uint16_t len){
+    //when this gets called we assume that we need to handle this packet
     //extract header
     ptr_audio_header_t _header = (ptr_audio_header_t)packet;
 
-    //convert to data type
+    //extract data
+    uint8_t _codec = _header->RCs & VBAN_AUDIO_CODEC_MASK;
+    uint8_t _dataType = _header->RCs & VBAN_AUDIO_DTYPE_MASK;
+    uint16_t _numberOfChannels = _header->NBC + 1;
+    uint16_t _numberOfSamples = _header->NBS +1;
 
-    //resample if needed
+    //init buffers
+    int16_t _audioBuffer[_numberOfChannels][_numberOfSamples] = {0};
 
+    //depending on codec separate samples and transform to standard data type
+    switch (_codec){
+        case VBAN_AUDIO_CODEC_PCM:
+            
+        break;
+    
+    default:
+        return 1;
+    }
     
 
     //when wer are finished push data to buffer
@@ -38,6 +54,41 @@ uint8_t VBAN_AUDIO::handle(void *packet, uint16_t len){
     //when we get here success
     return 0;
 }
+
+uint8_t VBAN_AUDIO::transform_PCM(void *input, uint16_t nbs, uint16_t nbc, uint8_t dtype, int16_t *output){
+    //select extraction methode depending on datatype
+    switch (dtype) {
+        case VBAN_AUDIO_DTYPE_BYTE8:
+        break;
+    
+        case VBAN_AUDIO_DTYPE_INT16:
+            break;
+
+        case VBAN_AUDIO_DTYPE_INT24:
+            break;
+        
+        case VBAN_AUDIO_DTYPE_INT32:
+            break;
+
+        case VBAN_AUDIO_DTYPE_FLOAT32:
+            break;
+
+        case VBAN_AUDIO_DTYPE_FLOAT64:
+            break;
+        
+        case VBAN_AUDIO_DTYPE_10BITS:
+            break;
+        
+        case VBAN_AUDIO_DTYPE_12BITS:
+            break;
+
+    default:
+        return 1;
+    }
+
+    return 0;
+}
+
 
 uint8_t VBAN_AUDIO::resample(uint16_t *source, uint16_t source_len, uint16_t source_freq, uint16_t *target, uint16_t target_len, uint16_t target_freq){
 
