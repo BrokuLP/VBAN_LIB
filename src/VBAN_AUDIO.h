@@ -11,6 +11,9 @@
 
 #include <stdint.h>
 
+#define VBAN_AUDIO_HEADER_LEN       28 //bytes
+
+//bit masks
 #define VBAN_AUDIO_CODEC_MASK       0b11110000
 #define VBAN_AUDIO_DTYPE_MASK       0b00000111
 

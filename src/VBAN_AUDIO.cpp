@@ -55,11 +55,15 @@ uint8_t VBAN_AUDIO::handle(void *packet, uint16_t len){
     return 0;
 }
 
-uint8_t VBAN_AUDIO::transform_PCM(void *input, uint16_t nbs, uint16_t nbc, uint8_t dtype, int16_t *output){
+uint8_t VBAN_AUDIO::transform_PCM(void *input, uint16_t nbs, uint16_t nbc, uint8_t dtype, uint8_t chIdx, int16_t *output){
     //select extraction methode depending on datatype
     switch (dtype) {
         case VBAN_AUDIO_DTYPE_BYTE8:
-        break;
+            uint8_t *_buffer = (uint8_t *)input;
+            for(uint16_t i = 0; i < nbs; i++) {
+                output[i] = ((uint16_t)_buffer[(VBAN_AUDIO_HEADER_LEN - 1) + i * nbc + i] - 128) * 0x00FF; //extract and parse sample
+            }
+            break;
     
         case VBAN_AUDIO_DTYPE_INT16:
             break;
