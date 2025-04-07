@@ -1,0 +1,67 @@
+@startuml handlePacket
+    title "handlePacket()"
+
+    start
+
+    if (handleThis()) then (false)
+        end
+    else (true)
+    endif
+
+    switch (header.subProtocol)
+        case (AUDIO)
+            :handleAudio();
+        case (SERIAL)
+            :handleSerial();
+        case (TXT)
+            :handleTXT();
+        case (SERVICE)
+            :handleService();
+        case (USER)
+            :cb_handleUser();
+            note right 
+                This is a wrapper for a function pointer
+                to a function implemented by the user
+            end note
+    endswitch
+
+    end
+    
+    rectangle "handleAudio()" {
+        start
+
+        stop
+    }
+
+
+    rectangle "handleThis()"{
+        start
+        floating note right
+            on termination without 
+            success returns false
+        end note
+
+        if (packet.len < MIN_LEN) then (false)
+            end
+        endif
+
+        if (IP_From == isAllowed) then (false)
+            end 
+        endif
+
+        :header = decodeHeader();
+
+        if(header.FOURC == "VBAN") then (false)
+            end
+        endif
+
+        if(header.streamName == isSubscribed) then (false)
+            end
+        endif
+
+        :return true and header;
+
+        end
+    }
+
+@enduml
