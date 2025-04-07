@@ -3,65 +3,78 @@
 
     start
 
-    if (handleThis()) then (false)
-        end
-    else (true)
-    endif
-
-    switch (header.subProtocol)
-        case (AUDIO)
-            :handleAudio();
-        case (SERIAL)
-            :handleSerial();
-        case (TXT)
-            :handleTXT();
-        case (SERVICE)
-            :handleService();
-        case (USER)
-            :cb_handleUser();
-            note right 
-                This is a wrapper for a function pointer
-                to a function implemented by the user
-            end note
-    endswitch
-
-    end
-    
-    rectangle "handleAudio()" {
-        start
-
-        stop
-    }
-
-
     rectangle "handleThis()"{
-        start
-        floating note right
-            on termination without 
-            success returns false
-        end note
 
         if (packet.len < MIN_LEN) then (false)
-            end
+            #pink:drop packet;
+            kill
         endif
 
         if (IP_From == isAllowed) then (false)
-            end 
+            #pink:drop packet; 
+            kill
         endif
 
-        :header = decodeHeader();
+        :header = decodeHeader(Common);
 
         if(header.FOURC == "VBAN") then (false)
-            end
+            #pink:drop packet;
+            kill
         endif
 
         if(header.streamName == isSubscribed) then (false)
-            end
+            #pink:drop packet;
+            kill
         endif
 
-        :return true and header;
-
-        end
     }
+
+    switch (header.subProtocol)
+        case (AUDIO)
+            rectangle "handleAudio()" {
+                :header = decodeHeader(Audio);
+                if (header.len != len)
+                    :setError("Corrupted");
+                    #pink:drop packet;
+                    kill
+                endif
+
+                if (header.)
+
+
+
+
+                :resample & decode data;
+
+                #LimeGreen:putToBuffer();
+                kill
+            }
+        case (SERIAL)
+            :handleSerial();
+            end
+        case (TXT)
+            :handleTXT();
+            end
+        case (SERVICE)
+            :handleService();
+            end
+        case (USER)
+            :cb_handleUser();
+            note right 
+                This is a wrapper for 
+                a function pointer to 
+                a function implemented 
+                by the user
+            end note
+            end
+        case (default)
+            #pink:drop packet;
+            note right
+                Protocol is not 
+                supported by the 
+                library
+            end note
+            kill
+    endswitch
 
 @enduml
