@@ -33,22 +33,32 @@
         case (AUDIO)
             rectangle "handleAudio()" {
                 :header = decodeHeader(Audio);
-                if (header.len != len)
-                    :setError("Corrupted");
+                if (header.len == len) then (false)
                     #pink:drop packet;
                     kill
                 endif
 
-                if (header.)
+                if (header.SampleRate == isSupported) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
 
+                if (header.BitResolution == isSupported) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
 
-
+                if (header.codec == isSupported) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
 
                 :resample & decode data;
 
-                #LimeGreen:putToBuffer();
+                #LimeGreen:cb_putToBuffer();
                 kill
             }
+
         case (SERIAL)
             :handleSerial();
             end
@@ -59,14 +69,15 @@
             :handleService();
             end
         case (USER)
-            :cb_handleUser();
+            #LimeGreen:cb_handleUser();
             note right 
                 This is a wrapper for 
                 a function pointer to 
                 a function implemented 
                 by the user
             end note
-            end
+            kill
+            
         case (default)
             #pink:drop packet;
             note right
