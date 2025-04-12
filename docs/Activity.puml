@@ -1,0 +1,91 @@
+@startuml handlePacket
+    title "handlePacket()"
+
+    start
+
+    rectangle "handleThis()"{
+
+        if (packet.len < MIN_LEN) then (false)
+            #pink:drop packet;
+            kill
+        endif
+
+        if (IP_From == isAllowed) then (false)
+            #pink:drop packet; 
+            kill
+        endif
+
+        :header = decodeHeader(Common);
+
+        if(header.FOURC == "VBAN") then (false)
+            #pink:drop packet;
+            kill
+        endif
+
+        if(header.streamName == isSubscribed) then (false)
+            #pink:drop packet;
+            kill
+        endif
+
+    }
+
+    switch (header.subProtocol)
+        case (AUDIO)
+            rectangle "handleAudio()" {
+                :header = decodeHeader(Audio);
+                if (header.len == len) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
+
+                if (header.SampleRate == isSupported) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
+
+                if (header.BitResolution == isSupported) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
+
+                if (header.codec == isSupported) then (false)
+                    #pink:drop packet;
+                    kill
+                endif
+
+                :resample & decode data;
+
+                #LimeGreen:cb_putToBuffer();
+                kill
+            }
+
+        case (SERIAL)
+            :handleSerial();
+            end
+        case (TXT)
+            :handleTXT();
+            end
+        case (SERVICE)
+            :handleService();
+            end
+        case (USER)
+            #LimeGreen:cb_handleUser();
+            note right 
+                This is a wrapper for 
+                a function pointer to 
+                a function implemented 
+                by the user
+            end note
+            kill
+            
+        case (default)
+            #pink:drop packet;
+            note right
+                Protocol is not 
+                supported by the 
+                library
+            end note
+            kill
+    endswitch
+
+@enduml
