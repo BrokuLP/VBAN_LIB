@@ -27,6 +27,9 @@ public:
     static constexpr uint8_t headerSize = 28;
     static constexpr uint8_t streamNameSize = 16;
     static constexpr uint32_t codeWord = 'NABV';
+    static constexpr uint16_t maxNumSamples = 256;
+    static constexpr uint16_t maxNumChannels = 256;
+    static constexpr uint8_t IPSize = 4;
 
     /**
      * @brief enum with possible return codes
@@ -39,6 +42,7 @@ public:
         STREAM_NOT_SUBSCRIBED,
         UNSUPPORTED_PROTOCOL,
         UNSUPPORTED_CODEC,
+        INVALID_SENDER_IP,
     };
 
     /**
@@ -101,7 +105,10 @@ public:
     
 
 private:
+    //storage
+
     uint8_t subscribedStream[streamNameSize];
+    uint8_t masterIP[4]; //IP to accept data from
 
     /**
      * @brief function to handle audio packets
@@ -113,12 +120,16 @@ private:
     returnCodes handleAudio(void *packet, uint16_t packetSize);
 
     /**
-     * @brief function to convert data type and sampling rate
+     * @brief 
      * 
-     * @param packet 
+     * @param oldData 
      * @param packetSize 
+     * @param newSamplingRate 
+     * @param newData       
+     * @param numChannels 
+     * @param numSamples 
      */
-    void convertData(void *packet, uint16_t packetSize, uint32_t newSamplingRate, uint16_t *newData);
+    void convertData(void *oldData, uint16_t packetSize, uint32_t newSamplingRate, uint16_t *newData, uint16_t numChannels, uint16_t numSamples);
     
 };
 
