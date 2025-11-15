@@ -46,6 +46,41 @@ VBAN::returnCodes VBAN::handlePacket(void *packet, uint16_t packetSize, uint8_t 
     
 }
 
+VBAN::returnCodes VBAN::handleService(void *packet, uint16_t packetSize){
+    serviceHeader *_header_ptr = reinterpret_cast <serviceHeader*>(packet);
+
+    switch (_header_ptr->service){
+        case SERVICE_IDENT:
+            break;
+
+        case SERVICE_CHATUTF8:
+            break;
+        
+        case SERVICE_RTPACKETREGISTER:
+            break;
+        
+        case SERVICE_RTPACKET:
+            break;
+    
+        default:
+            //if nothing matches, assume custom service
+            return callback_customService(packet, packetSize);
+    }
+
+    return SUCCESS;
+}
+
+VBAN::returnCodes VBAN::handleServiceIdent(void *packet, uint16_t packetSize) {
+    serviceHeader *_header_ptr = reinterpret_cast <serviceHeader*>(packet);
+
+    //handle ident request
+    if (!_header_ptr->isReply){
+        uint32_t _requestId = _header_ptr->FrameCounter;
+    }
+
+    return SUCCESS;
+}
+
 VBAN::returnCodes VBAN::handleAudio(void *packet, uint16_t packetSize){
     //decode header
     audioHeader *_header_ptr = reinterpret_cast <audioHeader*> (packet);
@@ -83,3 +118,22 @@ void VBAN::convertData(void *oldData, uint16_t packetSize, uint32_t newSamplingR
 
 
 }
+
+
+void VBAN::setGPSPostion(GPSPostion postion){
+    sysConf
+}
+void VBAN::setUSerPostion(GPSPostion position);
+void VBAN::setLanguage(langCodes langCode);
+void VBAN::setColor(uint8_t red, uint8_t green, uint8_t blue);
+void VBAN::setRate(uint32_t minRate, uint32_t prefRate, uint32_t maxRate);
+void VBAN::setDeviceType(bitType type);
+void VBAN::setBitFeature(bitFeature feature);
+void VBAN::setExtraBitFeature(extraBitFeature extraFeature);
+void VBAN::setDistant(uint8_t *distantIp, uint8_t distantIpLen, uint16_t distantPort);
+void VBAN::setDeviceName(uint8_t *name, uint8_t nameLen);
+void VBAN::setManufacturerName(uint8_t *name, uint8_t nameLen);
+void VBAN::setApplicationName(uint8_t *name, uint8_t nameLen);
+void VBAN::setHostName(uint8_t *name, uint8_t nameLen);
+void VBAN::setUserName(uint8_t *name, uint8_t nameLen);
+void VBAN::setUserComment(uint8_t *name, uint8_t nameLen);
