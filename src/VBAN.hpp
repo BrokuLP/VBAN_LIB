@@ -39,6 +39,7 @@ public:
     static constexpr uint8_t maxHostNameLen = 64;
     static constexpr uint8_t maxUserNameLen = 128;
     static constexpr uint8_t maxUserCommentLen = 128;
+    static constexpr uint8_t maxDistantIpLen = 32;
 
     /**
      * @brief enum with possible return codes

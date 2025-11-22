@@ -125,9 +125,8 @@ VBAN::returnCodes VBAN::sendPing0(uint8_t *targetIp, uint8_t targetIpLen, uint16
         servicePing format;
         uint8_t raw[sizeof(servicePing)];
     }_packet;
-     
 
-    _packet.format.colorRGB = (sysConf.color.red << 24) | (sysConf.color.green << 16) | (sysConf.color.blue << 8);
+    _packet.format.bitType = static_cast <uint32_t> (sysConf.deviceType);
 
     //not sure of multiple features at the same time are possible
     _packet.format.bitFeature = static_cast <uint32_t> (sysConf.feature);
@@ -137,7 +136,7 @@ VBAN::returnCodes VBAN::sendPing0(uint8_t *targetIp, uint8_t targetIpLen, uint16
     _packet.format.maxRate = sysConf.maxRate;
     _packet.format.minRate = sysConf.minRate;
 
-    _packet.format.bitType = static_cast <uint32_t> (sysConf.deviceType);
+    _packet.format.colorRGB = (sysConf.color.red << 24) | (sysConf.color.green << 16) | (sysConf.color.blue << 8);
 
     for(uint8_t i = 0; i<4; i++){
         _packet.format.nVersion[i] = version[i];
@@ -146,7 +145,40 @@ VBAN::returnCodes VBAN::sendPing0(uint8_t *targetIp, uint8_t targetIpLen, uint16
     copyPosition(sysConf.gpsPosition, &_packet.format.GPS_Postion);
     copyPosition(sysConf.userPosition, &_packet.format.USER_Position);
 
+    for (uint8_t i = 0; i < sizeof(_packet.format.langCodeAscii); i++) {
+        uint8_t c = static_cast <uint8_t>(sysConf.langCode >> (i * 8));
+        _packet.format.langCodeAscii[i] = replaceNoneAsciiChar(c);
+    }
 
+    //@TODO: unclear what the protocol expects here
+    for (uint8_t i = 0; i < maxDistantIpLen; i++) {
+        _packet.format.distantIPAscii[i] = 0;
+    }
+    _packet.format.distantPort = 0;
+
+    for(uint8_t i = 0; i<maxDeviceNameLen; i++){
+        _packet.format.deviceNameAscii[i] = sysConf.deviceName[i];
+    }
+
+    for(uint8_t i = 0; i<maxManufacturerNameLen; i++){
+        _packet.format.manufacturerNameAscii[i] = sysConf.manufacturerName[i];
+    }
+
+    for(uint8_t i = 0; i<maxApplicationNameLen; i++){
+        _packet.format.applicationNameAscii[i] = sysConf.applicationName[i];
+    }
+
+    for(uint8_t i = 0; i<maxHostNameLen; i++){
+        _packet.format.hostNameAscii[i] = sysConf.hostName[i];
+    }
+
+    for(uint8_t i = 0; i<maxUserNameLen; i++){
+        _packet.format.userNameUtf8[i] = sysConf.userName[i];
+    }
+
+    for(uint8_t i = 0; i<maxUserCommentLen; i++){
+        _packet.format.userCommentUtf8[i] = sysConf.userComment[i];
+    }
 
     return callback_sendUDP(_packet.raw, sizeof(_packet.raw),targetIp, targetIpLen, targetPort);
 }
