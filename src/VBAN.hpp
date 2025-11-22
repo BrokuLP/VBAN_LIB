@@ -33,6 +33,13 @@ public:
     static constexpr uint8_t GPSSize = 8;
     static constexpr uint16_t pingSize = 676;
 
+    static constexpr uint8_t maxDeviceNameLen = 64;
+    static constexpr uint8_t maxManufacturerNameLen = 64;
+    static constexpr uint8_t maxApplicationNameLen = 64;
+    static constexpr uint8_t maxHostNameLen = 64;
+    static constexpr uint8_t maxUserNameLen = 128;
+    static constexpr uint8_t maxUserCommentLen = 128;
+
     /**
      * @brief enum with possible return codes
      * 
@@ -45,6 +52,8 @@ public:
         UNSUPPORTED_PROTOCOL,
         UNSUPPORTED_CODEC,
         INVALID_SENDER_IP,
+        INVALID_PARAMETERS,
+        NOT_IPV4,
     };
 
     /**
@@ -114,7 +123,7 @@ public:
     }__attribute__((packed));
     static_assert(sizeof(serviceHeader) == headerSize, "service header must have header size");
 
-    struct GPSPostion {
+    struct GPSPosition {
         uint8_t latitudeDegree;
         uint8_t latitudeMinute;
         uint8_t latitudeSecond;
@@ -124,7 +133,7 @@ public:
         uint8_t longitudeSecond;
         uint8_t longitudeScent;
     }__attribute__((packed));
-    static_assert(sizeof(GPSPostion) == GPSSize, "GPSPosition must have size of GPSSize");
+    static_assert(sizeof(GPSPosition) == GPSSize, "GPSPosition must have size of GPSSize");
 
     struct servicePing{
         serviceHeader header;
@@ -136,8 +145,8 @@ public:
         uint32_t maxRate;
         uint32_t colorRGB;
         uint8_t  nVersion[4];
-        GPSPostion GPS_Postion;
-        GPSPostion USER_Position;
+        GPSPosition GPS_Postion;
+        GPSPosition USER_Position;
         uint8_t langCodeAscii[8];
         uint8_t reservedAscii[8];
         uint8_t reservedEx[64];
@@ -153,37 +162,41 @@ public:
     }__attribute__((packed));
     static_assert(sizeof(servicePing) == pingSize + headerSize, "servicePing must have pingSize");
 
+    struct rgbColor{
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+    };
+
     enum langCodes{
-        LANGCODE_AT = 'AT',
-        LANGCODE_BE = 'BE',
-        LANGCODE_BG = 'BG',
-        LANGCODE_HR = 'HR',
-        LANGCODE_CY = 'CY',
-        LANGCODE_CZ = 'CZ',
-        LANGCODE_DK = 'DK',
-        LANGCODE_EE = 'EE',
-        LANGCODE_FI = 'FI',
-        LANGCODE_FR = 'FR',
-        LANGCODE_DE = 'DE',
-        LANGCODE_GR = 'GR',
-        LANGCODE_HU = 'HU',
-        LANGCODE_IE = 'IE',
-        LANGCODE_IT = 'IT',
-        LANGCODE_LV = 'LV',
-        LANGCODE_LT = 'LT',
-        LANGCODE_LU = 'LU',
-        LANGCODE_MT = 'MT',
-        LANGCODE_NL = 'NL',
-        LANGCODE_PL = 'PL',
-        LANGCODE_PT = 'PT',
-        LANGCODE_RO = 'RO',
-        LANGCODE_SK = 'SK',
-        LANGCODE_SI = 'SI',
-        LANGCODE_ES = 'ES',
-        LANGCODE_SE = 'SE',
-        LANGCODE_MX = 'MX',
-        LANGCODE_CA = 'CA',
-        LANGCODE_US = 'US',
+        LANGCODE_BG = 'BG', // Bulgarian (BG)
+        LANGCODE_CS = 'CS', // Czech (CS)
+        LANGCODE_DA = 'DA', // Danish (DA)
+        LANGCODE_DE = 'DE', // German (DE)
+        LANGCODE_EL = 'EL', // Greek (EL)
+        LANGCODE_EN = 'EN', // English (EN)
+        LANGCODE_ES = 'ES', // Spanish (ES)
+        LANGCODE_ET = 'ET', // Estonian (ET)
+        LANGCODE_FI = 'FI', // Finnish (FI)
+        LANGCODE_FR = 'FR', // French (FR)
+        LANGCODE_HR = 'HR', // Croatian (HR)
+        LANGCODE_HU = 'HU', // Hungarian (HU)
+        LANGCODE_IT = 'IT', // Italian (IT)
+        LANGCODE_LB = 'LB', // Luxembourgish (LB)
+        LANGCODE_LT = 'LT', // Lithuanian (LT)
+        LANGCODE_LV = 'LV', // Latvian (LV)
+        LANGCODE_MT = 'MT', // Maltese (MT)
+        LANGCODE_NL = 'NL', // Dutch (NL)
+        LANGCODE_PL = 'PL', // Polish (PL)
+        LANGCODE_PT = 'PT', // Portuguese (PT)
+        LANGCODE_RO = 'RO', // Romanian (RO)
+        LANGCODE_SK = 'SK', // Slovak (SK)
+        LANGCODE_SL = 'SL', // Slovenian (SL)
+        LANGCODE_SV = 'SV', // Swedish (SV)
+        LANGCODE_NO = 'NO', // Norwegian (NO) - general
+        LANGCODE_NB = 'NB', // Norwegian Bokmål (NB)
+        LANGCODE_NN = 'NN', // Norwegian Nynorsk (NN)
+        LANGCODE_SE = 'SE', // Northern Sámi (SE)
     };
 
     enum bitType{
@@ -222,36 +235,143 @@ public:
      */
     returnCodes handlePacket(void *packet, uint16_t packetSize, uint8_t *senderIP, uint8_t senderIPSize);
 
-    //configuration functions
-    void setGPSPostion(GPSPostion postion);
-    void setUSerPostion(GPSPostion position);
+    /**
+     * @brief function to set the GPS position of the device
+     * 
+     * @param[in] postion the new gps position
+     */
+    void setGPSPosition(GPSPosition postion);
+
+    /**
+     * @brief function to set a user define gps position
+     * 
+     * @param[in] position a new user defined position 
+     */
+    void setUSerPostion(GPSPosition position);
+
+    /**
+     * @brief Set the Language object
+     * 
+     * @param langCode new language code of the device
+     */
     void setLanguage(langCodes langCode);
+
+    /**
+     * @brief Set the Color object
+     * 
+     * @param red 
+     * @param green 
+     * @param blue 
+     */
     void setColor(uint8_t red, uint8_t green, uint8_t blue);
-    void setRate(uint32_t minRate, uint32_t prefRate, uint32_t maxRate);
+
+    /**
+     * @brief Set the Rate object
+     * 
+     * @param minRate 
+     * @param prefRate 
+     * @param maxRate 
+     * @return returnCodes 
+     */
+    returnCodes setRate(uint32_t minRate, uint32_t prefRate, uint32_t maxRate);
+
+    /**
+     * @brief Set the Device Type object
+     * 
+     * @param type 
+     */
     void setDeviceType(bitType type);
+
+    /**
+     * @brief Set the Bit Feature object
+     * 
+     * @param feature 
+     */
     void setBitFeature(bitFeature feature);
+
+    /**
+     * @brief Set the Extra Bit Feature object
+     * 
+     * @param extraFeature 
+     */
     void setExtraBitFeature(extraBitFeature extraFeature);
-    void setDistant(uint8_t *distantIp, uint8_t distantIpLen, uint16_t distantPort);
+
+    /**
+     * @brief not exactly clear what this does in the protocol
+     * 
+     * @param distantIp 
+     * @param distantIpLen 
+     * @param distantPort 
+     * @return returnCodes 
+     */
+    returnCodes setDistant(uint8_t *distantIp, uint8_t distantIpLen, uint16_t distantPort);
+
+    /**
+     * @brief Set the device name
+     * 
+     * @param name new device name (ASCII)
+     * @param nameLen length of new device name
+     */
     void setDeviceName(uint8_t *name, uint8_t nameLen);
+
+    /**
+     * @brief Set the name of the manufacturer
+     * 
+     * @param name new manufacturer name (ASCII)
+     * @param nameLen length of the manufacture name
+     */
     void setManufacturerName(uint8_t *name, uint8_t nameLen);
+
+    /**
+     * @brief Set the Application name
+     * 
+     * @param name new application name (ASCII)
+     * @param nameLen length of th application name
+     */
     void setApplicationName(uint8_t *name, uint8_t nameLen);
+
+    /**
+     * @brief Set the host name of the device
+     * 
+     * @param name host name (ASCII)
+     * @param nameLen length of the host name
+     */
     void setHostName(uint8_t *name, uint8_t nameLen);
+
+    /**
+     * @brief Set the User Name object (UTF8)
+     * 
+     * @param name new user name (UTF8)
+     * @param nameLen length of the user name
+     */
     void setUserName(uint8_t *name, uint8_t nameLen);
-    void setUserComment(uint8_t *name, uint8_t nameLen);
+
+    /**
+     * @brief Set the User Comment object (UTF8)
+     * 
+     * @param name new user comment (UTF8)
+     * @param nameLen length of the user comment
+     */
+    void setUserComment(uint8_t *comment, uint8_t commentLen);
 
 private:
     struct configuration{
-        GPSPostion gpsPosition;
-        GPSPostion userPosition;
+        GPSPosition gpsPosition;
+        GPSPosition userPosition;
         langCodes langCode;
-        uint8_t color[3];
+        rgbColor color;
         uint32_t minRate;
         uint32_t prefRate;
         uint32_t maxRate;
         bitType deviceType;
         bitFeature feature;
         extraBitFeature extraFeature;
-        
+        uint8_t deviceName[maxDeviceNameLen];
+        uint8_t manufacturerName[maxManufacturerNameLen];
+        uint8_t applicationName[maxApplicationNameLen];
+        uint8_t hostName[maxHostNameLen];
+        uint8_t userName[maxUserNameLen]; //utf8
+        uint8_t userComment[maxUserCommentLen]; //utf8
     };
 
     //storage
@@ -271,7 +391,7 @@ private:
      * @param[in] targetPort target port for the packet to be send to
      * @return returnCodes 
      */
-    returnCodes (*callback_sendUDP)(uint8_t *packet, uint16_t packetLen, uint8_t targetIp, uint8_t ipLen, uint16_t targetPort);
+    returnCodes (*callback_sendUDP)(uint8_t *packet, uint16_t packetLen, uint8_t *targetIp, uint8_t ipLen, uint16_t targetPort);
     
     returnCodes (*callback_customService)(void *packet, uint16_t packetLen);
 
@@ -305,7 +425,39 @@ private:
      */
     returnCodes handleService(void *packet, uint16_t packetSize);
 
+    /**
+     * @brief function to handle identification service request
+     * 
+     * @param[in] packet 
+     * @param[in] packetSize 
+     * @return returnCodes 
+     */
     returnCodes handleServiceIdent(void *packet, uint16_t packetSize);
+
+    /**
+     * @brief sends a ping0 to a target ip address and port
+     * 
+     * @param[in] targetIp ip as uint8_t array
+     * @param[in] targetIpLen size of ip address (4 for IPv4)
+     * @param[in] targetPort  port to send packet to
+     * @return returnCodes 
+     */
+    returnCodes sendPing0(uint8_t *targetIp, uint8_t targetIpLen, uint16_t targetPort);
+
+    /**
+     * @brief function to copy data from one position struct ot another
+     * 
+     * @param[in] source 
+     * @param[in] target 
+     */
+    void copyPosition(GPSPosition source, GPSPosition *target);
+
+    /**
+     * @brief function to replace a none ASCII character with '?'     * 
+     * @param c character to be checked
+     * @return uint8_t either c if c is ASCII else '?'
+     */
+    uint8_t VBAN::replaceNoneAsciiChar(uint8_t c);
     
 };
 

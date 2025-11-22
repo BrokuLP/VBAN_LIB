@@ -119,21 +119,194 @@ void VBAN::convertData(void *oldData, uint16_t packetSize, uint32_t newSamplingR
 
 }
 
+VBAN::returnCodes VBAN::sendPing0(uint8_t *targetIp, uint8_t targetIpLen, uint16_t targetPort){
 
-void VBAN::setGPSPostion(GPSPostion postion){
-    sysConf
+    union {
+        servicePing format;
+        uint8_t raw[sizeof(servicePing)];
+    }_packet;
+     
+
+    _packet.format.colorRGB = (sysConf.color.red << 24) | (sysConf.color.green << 16) | (sysConf.color.blue << 8);
+
+    //not sure of multiple features at the same time are possible
+    _packet.format.bitFeature = static_cast <uint32_t> (sysConf.feature);
+    _packet.format.bitFeatureEx = static_cast <uint32_t> (sysConf.extraFeature);
+
+    _packet.format.preferedRate = sysConf.prefRate;
+    _packet.format.maxRate = sysConf.maxRate;
+    _packet.format.minRate = sysConf.minRate;
+
+    _packet.format.bitType = static_cast <uint32_t> (sysConf.deviceType);
+
+    for(uint8_t i = 0; i<4; i++){
+        _packet.format.nVersion[i] = version[i];
+    }
+
+    copyPosition(sysConf.gpsPosition, &_packet.format.GPS_Postion);
+    copyPosition(sysConf.userPosition, &_packet.format.USER_Position);
+
+
+
+    return callback_sendUDP(_packet.raw, sizeof(_packet.raw),targetIp, targetIpLen, targetPort);
 }
-void VBAN::setUSerPostion(GPSPostion position);
-void VBAN::setLanguage(langCodes langCode);
-void VBAN::setColor(uint8_t red, uint8_t green, uint8_t blue);
-void VBAN::setRate(uint32_t minRate, uint32_t prefRate, uint32_t maxRate);
-void VBAN::setDeviceType(bitType type);
-void VBAN::setBitFeature(bitFeature feature);
-void VBAN::setExtraBitFeature(extraBitFeature extraFeature);
-void VBAN::setDistant(uint8_t *distantIp, uint8_t distantIpLen, uint16_t distantPort);
-void VBAN::setDeviceName(uint8_t *name, uint8_t nameLen);
-void VBAN::setManufacturerName(uint8_t *name, uint8_t nameLen);
-void VBAN::setApplicationName(uint8_t *name, uint8_t nameLen);
-void VBAN::setHostName(uint8_t *name, uint8_t nameLen);
-void VBAN::setUserName(uint8_t *name, uint8_t nameLen);
-void VBAN::setUserComment(uint8_t *name, uint8_t nameLen);
+
+void VBAN::copyPosition(GPSPosition source, GPSPosition *target){
+    target->latitudeDegree = source.latitudeDegree;
+    target->latitudeMinute = source.latitudeMinute;
+    target->latitudeSecond = source.latitudeSecond;
+    target->latitudeScent  = source.latitudeScent;
+
+    target->longitudeDegree = source.longitudeDegree;
+    target->longitudeMinute = source.longitudeMinute;
+    target->longitudeSecond = source.longitudeSecond;
+    target->longitudeScent  = source.longitudeScent;
+}
+
+void VBAN::setGPSPosition(GPSPosition postion){
+    copyPosition(postion, &sysConf.gpsPosition);
+}
+
+void VBAN::setUSerPostion(GPSPosition position){
+    copyPosition(position, &sysConf.userPosition);
+}
+
+void VBAN::setLanguage(langCodes langCode){
+    sysConf.langCode = langCode;
+}
+
+void VBAN::setColor(uint8_t red, uint8_t green, uint8_t blue){
+    sysConf.color.red = red;
+    sysConf.color.green = green;
+    sysConf.color.blue = blue;
+}
+
+VBAN::returnCodes VBAN::setRate(uint32_t minRate, uint32_t prefRate, uint32_t maxRate){
+
+    if(!minRate < maxRate){
+        return INVALID_PARAMETERS;
+    }
+
+    if(!(minRate < prefRate && prefRate < maxRate)){
+        return INVALID_PARAMETERS;
+    }
+
+    sysConf.minRate = minRate;
+    sysConf.prefRate = prefRate;
+    sysConf.maxRate = maxRate;
+
+    return SUCCESS;
+}
+
+void VBAN::setDeviceType(bitType type){
+    sysConf.deviceType = type;
+}
+
+void VBAN::setBitFeature(bitFeature feature){
+    sysConf.feature = feature;
+}
+
+void VBAN::setExtraBitFeature(extraBitFeature extraFeature){
+    sysConf.extraFeature = extraFeature;
+}
+
+VBAN::returnCodes VBAN::setDistant(uint8_t *distantIp, uint8_t distantIpLen, uint16_t distantPort){
+    if (distantIpLen != 0){
+        return NOT_IPV4;
+    }
+
+    return SUCCESS;
+}
+
+void VBAN::setDeviceName(uint8_t *name, uint8_t nameLen){
+
+    if (nameLen < 1) {
+        return;
+    }
+
+    if (nameLen > maxDeviceNameLen){
+        nameLen = maxDeviceNameLen;
+    }
+
+    for(uint8_t i = 0; i<nameLen; i++) {
+        sysConf.deviceName[i] = replaceNoneAsciiChar(name[i]);
+    }
+}
+
+uint8_t VBAN::replaceNoneAsciiChar(uint8_t c){
+    if (c > 127){
+        return '?';
+    }
+    return c;
+}
+
+
+void VBAN::setManufacturerName(uint8_t *name, uint8_t nameLen) {
+    
+    if (nameLen < 1) {
+        return;
+    }
+
+    if (nameLen > maxManufacturerNameLen){
+        nameLen = maxManufacturerNameLen;
+    }
+
+    for(uint8_t i = 0; i<nameLen; i++) {
+        sysConf.manufacturerName[i] = replaceNoneAsciiChar(name[i]);
+    }
+}
+
+void VBAN::setApplicationName(uint8_t *name, uint8_t nameLen) {
+    if (nameLen < 1) {
+        return;
+    }
+
+    if (nameLen > maxApplicationNameLen) {
+        nameLen = maxApplicationNameLen;
+    }
+
+    for (uint8_t i = 0; i < nameLen; i++) {
+        sysConf.applicationName[i] = replaceNoneAsciiChar(name[i]);
+    }
+}
+
+void VBAN::setHostName(uint8_t *name, uint8_t nameLen) {
+    if (nameLen < 1) {
+        return;
+    }
+
+    if (nameLen > maxHostNameLen) {
+        nameLen = maxHostNameLen;
+    }
+
+    for (uint8_t i = 0; i<nameLen; i++){
+        sysConf.hostName[i] = replaceNoneAsciiChar(name[i]);
+    }
+}
+void VBAN::setUserName(uint8_t *name, uint8_t nameLen) {
+    if (nameLen < 1) {
+        return;
+    }
+
+    if (nameLen > maxUserNameLen) {
+        nameLen = maxUserNameLen;
+    }
+
+    for (uint8_t i = 0; i < nameLen; i++) {
+        sysConf.userName[i] = name[i];
+    }
+}
+
+void VBAN::setUserComment(uint8_t *comment, uint8_t commentLen) {
+    if (commentLen < 1) {
+        return;
+    }
+
+    if (commentLen > maxUserCommentLen) {
+        commentLen = maxUserCommentLen;
+    }
+
+    for (uint8_t i = 0; i < commentLen; i++){
+        sysConf.userComment[i] = comment[i];
+    }
+}
