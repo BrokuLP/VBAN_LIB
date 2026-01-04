@@ -114,9 +114,64 @@ void VBAN::convertData(void *oldData, uint16_t packetSize, uint32_t newSamplingR
     //unpack header
     audioHeader* _header_ptr = reinterpret_cast <audioHeader*> (oldData);
 
-    //get required data
+    int16_t _buffer[numChannels * numSamples] = {0};
+    decodePCM()
+
+}
+
+VBAN::returnCodes VBAN::decodePCM(uint8_t *data, uint16_t dataLen, audioDataTypes dataType, int16_t *result, uint16_t resultLen) {
+    
+    if (dataLen > resultLen) {
+        return BUFFER_TOO_SMALL;
+    }
+    
+    for (uint16_t i = 0; i < dataLen; i++){
+        switch (dataType) {
+            case ADT_BYTE8:
+                result[i] = static_cast<int16_t> ((data[i] - 128) * 256);
+                break;
+
+            case ADT_INT16:
+                result[i] = data[i];
+                break;
+
+            case ADT_INT24:
+                result[i] = static_cast<int16_t> (
+                    (data[i * 3] << 16 | 
+                    data[i * 3 + 1] << 8 |
+                    data[i * 3 + 2])/256
+                );
+                break;
+
+            case ADT_INT32:
+                result[i] = static_cast<int16_t>(
+                    (data[i*4] << 24 |
+                    data[i*4 + 1] << 16 |
+                    data[i*4 + 2] << 8 |
+                    data[i*4 + 3])/65538
+                );
+                break;
+
+            case ADT_FLOAT32:
+                result[i] = static_cast<float>(data[i*4]<<24|data[i*4+1]<<16|data[i*4+2]<<8|data[i*4+3])*32767.0;
+                break;
+
+            case ADT_FLOAT64:
+                break;
+
+            case ADT_12BITS:
+                break;
+
+            case ADT_10BITS:
+                break;
+
+            default:
+                return UNSUPPORTED_CODEC;
+        }
+    }
 
 
+    return SUCCESS;
 }
 
 VBAN::returnCodes VBAN::sendPing0(uint8_t *targetIp, uint8_t targetIpLen, uint16_t targetPort){
@@ -341,4 +396,8 @@ void VBAN::setUserComment(uint8_t *comment, uint8_t commentLen) {
     for (uint8_t i = 0; i < commentLen; i++){
         sysConf.userComment[i] = comment[i];
     }
+}
+
+VBAN::VBAN(uint8_t *ManufacturerName, uint8_t ManufacturerNameLen){
+    setManufacturerName(ManufacturerName, ManufacturerNameLen);
 }

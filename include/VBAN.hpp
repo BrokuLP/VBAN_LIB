@@ -18,7 +18,7 @@
 class VBAN
 {
 public:
-    VBAN(/* args */);
+    VBAN(uint8_t *ManufacturerName, uint8_t ManufacturerNameLen);
     VBAN(VBAN& other) = delete;
     VBAN(VBAN&& other) = delete;
     ~VBAN();
@@ -55,6 +55,7 @@ public:
         INVALID_SENDER_IP,
         INVALID_PARAMETERS,
         NOT_IPV4,
+        BUFFER_TOO_SMALL,
     };
 
     /**
@@ -62,11 +63,14 @@ public:
      * 
      */
     enum audioDataTypes{
-        ADT_BYTE8 = 0,
-        ADT_INT16 = 1,
-        ADT_INT32 = 3,
-        ADT_FLOAT32 = 4,
-        ADT_FLOAT64 = 5,
+        ADT_BYTE8 = 0x00,
+        ADT_INT16 = 0x01,
+        ADT_INT24 = 0x02,
+        ADT_INT32 = 0x03,
+        ADT_FLOAT32 = 0x04,
+        ADT_FLOAT64 = 0x05,
+        ADT_12BITS = 0x06,
+        ADT_10BITS = 0x07,
     };
 
     enum supportedServices{
@@ -459,6 +463,17 @@ private:
      * @return uint8_t either c if c is ASCII else '?'
      */
     uint8_t VBAN::replaceNoneAsciiChar(uint8_t c);
+
+    /**
+     * @brief function to decode data from a PCM stream to INT16 format
+     * 
+     * @param[in] data 
+     * @param[in] dataLen number of total samples in input data
+     * @param[in] dataType type of data
+     * @param[out] result decoded data as INT16
+     * @param[in] resultLen size of result buffer in samples
+     */
+    returnCodes decodePCM(uint8_t *data, uint16_t dataLen, audioDataTypes dataType, int16_t *result, uint16_t resultLen);
     
 };
 
