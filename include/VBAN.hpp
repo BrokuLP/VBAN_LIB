@@ -102,31 +102,72 @@ public:
      * @details FOURC, StreamName, FrameCounter, subProtocol are common to all headers
      */
     struct audioHeader {
-        unsigned int FOURC          : 32;
+        uint32_t FOURC;
         unsigned int sampleRate     : 5;
         unsigned int subProtocol    : 3;
-        unsigned int nbSamples      : 8;
-        unsigned int nbChannels     : 8;
+        uint8_t nbSamples;
+        uint8_t nbChannels;
         unsigned int codec          : 4;
         unsigned int reserved       : 1;
         unsigned int bitResolution  : 3;
-        uint8_t StreamName[streamNameSize]; //ASCII
-        unsigned int FrameCounter   : 32;
+        uint8_t streamName[streamNameSize]; //ASCII
+        uint32_t frameCounter;
     }__attribute__((packed));
-    static_assert(sizeof(audioHeader) == headerSize, "audio header must have header size");
+    static_assert(sizeof(audioHeader) == headerSize, "audioHeader has invalid size");
 
     struct serviceHeader {
-        unsigned int FOURC          : 32;
-        unsigned int reserved0      : 5;
+        uint32_t FOURC;
+        unsigned int bps            : 5;
+        unsigned int subProtocol    : 3;
+        uint8_t bitMode;
+        uint8_t channelIdent;
+        unsigned int dataFormat     : 3;
+        unsigned int reserved       : 1;
+        unsigned int serialType     : 4;
+        uint8_t streamName[streamNameSize]; //ASCII
+        uint32_t frameCounter;
+    }__attribute__((packed));
+    static_assert(sizeof(serviceHeader) == headerSize, "serviceHeader has invalid size");
+
+    struct textHeader {
+        uint32_t FOURC;
+        unsigned int bps            : 5;
+        unsigned int subProtocol    : 3;
+        uint8_t bitMode;
+        uint8_t channelIdent;
+        unsigned int dataFormat     : 3;
+        unsigned int reserved       : 1;
+        unsigned int serialType     : 4;
+        uint8_t streamName[streamNameSize];
+        uint32_t frameCounter;
+    }__attribute__((packed));
+    static_assert(sizeof(textHeader) == headerSize, "textHeader has invalid size");
+    
+    struct frameHeader {
+        uint32_t FOURC;
+        unsigned int mbps           : 5;
+        unsigned int subProtocol    : 3;
+        uint16_t packetCount;
+        unsigned int packetType     : 3;
+        unsigned int reserved       : 1;
+        unsigned int serialType     : 4;
+        uint8_t streamName[streamNameSize];
+        uint32_t frameCounter;
+    }__attribute__((packed));
+    static_assert(sizeof(frameHeader) == headerSize, "frameHeader has invalid size");
+
+    struct serviceHeader {
+        uint32_t FOURC;
+        unsigned int reserved       : 5;
         unsigned int subProtocol    : 3;
         unsigned int isReply        : 1;
         unsigned int function       : 7;
-        unsigned int service        : 8;
-        unsigned int info           : 8;
+        uint8_t service;
+        uint8_t info;
         uint8_t StreamName[streamNameSize]; //ASCII
-        unsigned int FrameCounter   : 32;
+        uint32_t FrameCounter;
     }__attribute__((packed));
-    static_assert(sizeof(serviceHeader) == headerSize, "service header must have header size");
+    static_assert(sizeof(serviceHeader) == headerSize, "serviceHeader has invalid size");
 
     struct GPSPosition {
         uint8_t latitudeDegree;
