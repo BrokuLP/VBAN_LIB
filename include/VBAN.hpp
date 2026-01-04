@@ -85,11 +85,12 @@ public:
      * 
      */
     enum subProtocols{
-        PROT_AUDIO      = 0,
-        PROT_SERIAL     = 1,
-        PROT_TXT        = 2,
-        PROT_SERVICE    = 3,
-        PROT_USER       = 7,
+        PROT_AUDIO      = 0x00,
+        PROT_SERIAL     = 0x20,
+        PROT_TXT        = 0x40,
+        PROT_SERVICE    = 0x60,
+        PROT_USER       = 0xE0,
+        PROT_FRAME      = 0x80,
     };
 
     enum suportedCodecs {
@@ -470,6 +471,14 @@ private:
      * @return returnCodes 
      */
     returnCodes handleService(void *packet, uint16_t packetSize);
+
+    returnCodes handleSerial(void *packet, uint16_t packetSize);
+
+    returnCodes handleText(void *packet, uint16_t packetSize);
+
+    returnCodes handleFrame(void *packet, uint16_t packetSize);
+
+    returnCodes handleUser(void *packet, uint16_t packetSize);
 
     /**
      * @brief function to handle identification service request

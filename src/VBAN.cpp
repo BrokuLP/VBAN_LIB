@@ -31,7 +31,7 @@ VBAN::returnCodes VBAN::handlePacket(void *packet, uint16_t packetSize, uint8_t 
 
     //check if stream is subscribed
     for (uint8_t i = 0; i < streamNameSize; i++) {
-        if(subscribedStream[i] != _header_ptr->StreamName[i]){
+        if(subscribedStream[i] != _header_ptr->streamName[i]){
             return STREAM_NOT_SUBSCRIBED;
         }
     }
@@ -39,6 +39,21 @@ VBAN::returnCodes VBAN::handlePacket(void *packet, uint16_t packetSize, uint8_t 
     switch (_header_ptr->subProtocol){
         case PROT_AUDIO:
             return handleAudio(packet, packetSize);
+
+        case PROT_SERIAL:
+            return handleSerial(packet, packetSize);
+
+        case PROT_TXT:
+            return handleText(packet, packetSize);
+        
+        case PROT_USER:
+            return handleUser(packet, packetSize);
+
+        case PROT_FRAME:
+            return handleFrame(packet, packetSize);
+
+        case PROT_SERVICE:
+            return handleService(packet, packetSize);
         
         default:
             return UNSUPPORTED_PROTOCOL;
